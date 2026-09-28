@@ -42,7 +42,11 @@ export default function AllUnit({ types }) {
                 <div className="py-8">
                     <div className="max-w-7xl sm:px-6 lg:px-88">
 
-                        <div className="overflow-hidden bg-white sm:rounded-lg dark:bg-gray-100">
+                        <div className="consultation-card overflow-hidden">
+                            <div className="consultation-card-header">
+                                <div className="consultation-card-title">Recherche dans toutes les unités</div>
+                                <span className="consultation-card-badge">Formulaire de recherche</span>
+                            </div>
 
                             <form onSubmit={handleSearch}>
                                 <div className="gap-4 m-8 border-sky-200 font-bold">

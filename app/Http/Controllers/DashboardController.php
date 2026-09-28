@@ -2,20 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use App\Models\Docrh;
 use App\Models\Pieces;
 use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $totalPieces = Pieces::count();
+        $totalRequiredPieces = Pieces::where('status', 'Obligatoire')->count();
         $users = Docrh::with('pieces')->get();
 
         $totalUsers = $users->count();
@@ -23,20 +23,18 @@ class DashboardController extends Controller
         $usersNeedingAttention = collect();
 
         foreach ($users as $user) {
-            $validatedPieces = 0;
+            $requiredPieces = $user->pieces
+                ->filter(fn ($piece) => $piece->status === 'Obligatoire');
 
-            foreach ($user->pieces as $piece) {
-                // Vérification du pivot
+            $validatedPieces = $requiredPieces->filter(function ($piece) {
                 $files = is_string($piece->pivot->file_paths)
                     ? json_decode($piece->pivot->file_paths, true)
                     : $piece->pivot->file_paths;
 
-                if (is_array($files) && count($files) > 0) {
-                    $validatedPieces++;
-                }
-            }
+                return is_array($files) && count($files) > 0;
+            })->count();
 
-            $percentage = $totalPieces > 0 ? round(($validatedPieces / $totalPieces) * 100) : 0;
+            $percentage = $totalRequiredPieces > 0 ? round(($validatedPieces / $totalRequiredPieces) * 100) : 0;
 
             if ($percentage == 100) {
                 $completeDossiersCount++;
@@ -48,7 +46,7 @@ class DashboardController extends Controller
                     'name' => $user->name,
                     'matricule' => $user->matricule,
                     'percentage' => $percentage,
-                    'missing_count' => $totalPieces - $validatedPieces
+                    'missing_count' => max($totalRequiredPieces - $validatedPieces, 0),
                 ]);
             }
         }
@@ -58,7 +56,7 @@ class DashboardController extends Controller
                 'totalUsers' => $totalUsers,
                 'completeDossiersCount' => $completeDossiersCount,
                 'incompleteDossiersCount' => $totalUsers - $completeDossiersCount,
-                'complianceRate' => $totalUsers > 0 ? round((($totalUsers - $completeDossiersCount) / $totalUsers) * 100) : 0,
+                'complianceRate' => $totalUsers > 0 ? round(($completeDossiersCount / $totalUsers) * 100) : 0,
             ],
             'worstDossiers' => $usersNeedingAttention->sortBy('percentage')->take(5)->values(),
             'recentUsers' => Docrh::latest()->take(5)->get()->map(fn($user) => [
@@ -70,41 +68,134 @@ class DashboardController extends Controller
 
     }
 
-    public function incompleteDossiers()
+    public function incompleteDossiers(Request $request)
     {
-        $totalPieces = Pieces::where('status', 'Obligatoire')->count();
-        $incompleteUsers = collect();
+        $requiredPieces = Pieces::where('status', 'Obligatoire')->orderBy('id')->get();
+        $totalPieces = $requiredPieces->count();
+        $incompleteUsers = $this->getIncompleteDossiers($request, $requiredPieces);
+        $perPage = 10;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $paginatedUsers = new LengthAwarePaginator(
+            $incompleteUsers->forPage($currentPage, $perPage)->values(),
+            $incompleteUsers->count(),
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
 
-        foreach (Docrh::with('pieces')->get() as $user) {
-            $validatedPieces = 0;
+        return Inertia::render('Consultation/Dossierrh/IncompleteDossiers', [
+            'incompleteUsers' => $paginatedUsers,
+            'totalPiecesCount' => $totalPieces,
+            'filters' => $request->only(['search', 'completion']),
+        ]);
+    }
 
-            foreach ($user->pieces as $piece) {
-                $files = is_string($piece->pivot->file_paths)
-                    ? json_decode($piece->pivot->file_paths, true)
-                    : $piece->pivot->file_paths;
+    /**
+     * Exporte tous les dossiers incomplets filtrés dans un fichier Excel compatible.
+     */
+    public function exportIncompleteDossiers(Request $request)
+    {
+        $requiredPieces = Pieces::where('status', 'Obligatoire')->orderBy('id')->get();
+        $totalPieces = $requiredPieces->count();
+        $incompleteUsers = $this->getIncompleteDossiers($request, $requiredPieces);
+        $fileName = 'dossiers_incomplets_' . now()->format('Y-m-d_H-i') . '.xls';
 
-                if (is_array($files) && count($files) > 0) {
-                    $validatedPieces++;
+        return response()->streamDownload(function () use ($incompleteUsers, $requiredPieces, $totalPieces) {
+            echo "\xEF\xBB\xBF";
+            echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><style>';
+            echo 'body{font-family:Arial,sans-serif;color:#1f2937}';
+            echo 'h1{color:#0f766e}table{border-collapse:collapse;width:100%}';
+            echo 'th{background:#0f766e;color:#fff;padding:10px;text-align:left}';
+            echo 'td{border:1px solid #d1d5db;padding:8px}';
+            echo 'tr:nth-child(even){background:#f0fdfa}.missing{color:#b91c1c;font-weight:bold}';
+            echo '</style></head><body>';
+            echo '<h1>Dossiers incomplets</h1>';
+            echo '<p>Total de pièces obligatoires : ' . $totalPieces . '</p>';
+            echo '<table><thead><tr><th>Matricule</th><th>Nom et prénom</th><th>Pièces absentes</th>';
+            foreach ($requiredPieces as $piece) {
+                echo '<th>' . e(str_replace('_', ' ', $piece->name)) . '</th>';
+            }
+            echo '<th>Progression</th></tr></thead><tbody>';
+
+            foreach ($incompleteUsers as $user) {
+                echo '<tr>';
+                echo '<td>' . e($user['matricule']) . '</td>';
+                echo '<td>' . e(str_replace('_', ' ', $user['name'])) . '</td>';
+                echo '<td class="missing">' . e(implode('; ', $user['missing_pieces'])) . '</td>';
+                foreach ($user['piece_statuses'] as $isPresent) {
+                    echo '<td class="' . ($isPresent ? '' : 'missing') . '">' . ($isPresent ? 'Oui' : 'Non') . '</td>';
+                }
+                echo '<td>' . e($user['percentage'] . '%') . '</td>';
+                echo '</tr>';
+            }
+
+            echo '</tbody></table></body></html>';
+        }, $fileName, [
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
+        ]);
+    }
+
+    private function getIncompleteDossiers(Request $request, $requiredPieces)
+    {
+        $searchTerms = preg_split(
+            '/\s+/',
+            str_replace('_', ' ', trim((string) $request->input('search'))),
+            -1,
+            \PREG_SPLIT_NO_EMPTY
+        );
+        $completion = $request->input('completion');
+        $totalPieces = $requiredPieces->count();
+
+        return Docrh::with('pieces')->get()->map(function ($user) use ($requiredPieces, $totalPieces) {
+            $pieceStatuses = $requiredPieces->mapWithKeys(function ($piece) use ($user) {
+                $userPiece = $user->pieces->firstWhere('id', $piece->id);
+
+                return [$piece->id => $this->hasAttachedFiles($userPiece)];
+            });
+            $validatedPieces = $pieceStatuses->filter()->count();
+            $missingPieces = $requiredPieces
+                ->filter(fn ($piece) => !$pieceStatuses->get($piece->id))
+                ->pluck('name')
+                ->map(fn ($name) => str_replace('_', ' ', $name))
+                ->values()
+                ->all();
+            $percentage = $totalPieces > 0 ? round(($validatedPieces / $totalPieces) * 100) : 0;
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'matricule' => $user->matricule,
+                'percentage' => $percentage,
+                'missing_count' => max($totalPieces - $validatedPieces, 0),
+                'missing_pieces' => $missingPieces,
+                'piece_statuses' => $pieceStatuses->values()->all(),
+            ];
+        })->filter(function (array $user) use ($searchTerms, $completion) {
+            if ($user['percentage'] >= 100) {
+                return false;
+            }
+
+            $normalizedName = mb_strtolower(str_replace('_', ' ', $user['name'] ?? ''));
+            $normalizedMatricule = mb_strtolower((string) ($user['matricule'] ?? ''));
+
+            foreach ($searchTerms as $term) {
+                $term = mb_strtolower($term);
+                if (!str_contains($normalizedName, $term) && !str_contains($normalizedMatricule, $term)) {
+                    return false;
                 }
             }
 
-            $percentage = $totalPieces > 0 ? round(($validatedPieces / $totalPieces) * 100) : 0;
-
-            if ($percentage < 100) {
-                $incompleteUsers->push([
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'matricule' => $user->matricule,
-                    'percentage' => $percentage,
-                    'missing_count' => $totalPieces - $validatedPieces,
-                ]);
-            }
-        }
-
-        return Inertia::render('Consultation/Dossierrh/IncompleteDossiers', [
-            'incompleteUsers' => $incompleteUsers->sortBy('percentage')->values(),
-            'totalPiecesCount' => $totalPieces,
-        ]);
+            return match ($completion) {
+                'zero' => $user['percentage'] === 0,
+                'low' => $user['percentage'] >= 1 && $user['percentage'] < 50,
+                'medium' => $user['percentage'] >= 50 && $user['percentage'] < 80,
+                'high' => $user['percentage'] >= 80 && $user['percentage'] < 100,
+                default => true,
+            };
+        })->sortBy('percentage')->values();
     }
 
     public function listview(Request $request)
@@ -113,11 +204,18 @@ class DashboardController extends Controller
 
         // 1. Recherche par nom ou matricule (PostgreSQL ilike)
         if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function (Builder $q) use ($search) {
-                $q->where('name', 'ilike', '%' . $search . '%')
-                  ->orWhere('matricule', 'ilike', '%' . $search . '%');
-            });
+            $searchTerms = preg_split('/\s+/', str_replace('_', ' ', trim($request->search)), -1, \PREG_SPLIT_NO_EMPTY);
+
+            // Chaque terme doit être présent dans le nom normalisé ou le matricule.
+            // Ainsi « Jean Dupont », « Jean_Dupont » et « Dupont Jean » donnent le même résultat.
+            foreach ($searchTerms as $term) {
+                $query->where(function (Builder $q) use ($term) {
+                    $likeTerm = '%' . $term . '%';
+
+                    $q->whereRaw("REPLACE(name, '_', ' ') ILIKE ?", [$likeTerm])
+                      ->orWhere('matricule', 'ilike', $likeTerm);
+                });
+            }
         }
 
         // 2. Filtre par pièce spécifique et statut
@@ -151,45 +249,33 @@ class DashboardController extends Controller
     }
 
     /**
-     * Supprime un dossier et ses fichiers associés
+     * Supprime un personnel sans supprimer ses fichiers associés.
      */
     public function destroy($id)
     {
-        $user = Docrh::with('pieces')->findOrFail($id);
+        Docrh::findOrFail($id)->delete();
 
-        // Suppression des fichiers physiques sur le disque
-        foreach ($user->pieces as $piece) {
-            $paths = is_string($piece->pivot->file_paths)
-                ? json_decode($piece->pivot->file_paths, true)
-                : $piece->pivot->file_paths;
-
-            if (is_array($paths)) {
-                foreach ($paths as $path) {
-                    if (Storage::disk('public')->exists($path)) {
-                        Storage::disk('public')->delete($path);
-                    }
-                }
-            }
-        }
-
-        // Suppression de l'entrée en base de données
-        $user->delete();
-
-        return redirect()->route('dossierrh.list')->with('message', 'Le dossier et ses documents ont été supprimés définitivement.');
+        return redirect()->route('dossierrh.list')->with('message', 'Le personnel a été supprimé. Les fichiers joints ont été conservés.');
     }
 
     public function search(Request $request)
     {
         $search = $request->input('search');
+        $searchTerms = preg_split('/\s+/', str_replace('_', ' ', trim((string) $search)), -1, \PREG_SPLIT_NO_EMPTY);
 
         // On récupère les utilisateurs filtrés par nom ou matricule
-        $results = Docrh::with('pieces')
-            ->where(function (Builder $q) use ($search) {
-                $q->where('name', 'ilike', '%' . $search . '%')
-                ->orWhere('matricule', 'ilike', '%' . $search . '%');
-            })
-            ->paginate(15)
-            ->withQueryString();
+        $query = Docrh::with('pieces');
+
+        foreach ($searchTerms as $term) {
+            $query->where(function (Builder $q) use ($term) {
+                $likeTerm = '%' . $term . '%';
+
+                $q->whereRaw("REPLACE(name, '_', ' ') ILIKE ?", [$likeTerm])
+                  ->orWhere('matricule', 'ilike', $likeTerm);
+            });
+        }
+
+        $results = $query->paginate(15)->withQueryString();
 
         return Inertia::render('Consultation/Dossierrh/SearchRh', [
             'users' => $results,
@@ -202,7 +288,7 @@ class DashboardController extends Controller
 
     public function downloadGeneralReport(Request $request)
     {
-        $allPieces = Pieces::all();
+        $allPieces = Pieces::orderBy('id')->get();
         // Fetch all users with their associated pieces
         $users = Docrh::with('pieces')->get();
 
@@ -217,54 +303,51 @@ class DashboardController extends Controller
             // Add BOM for UTF-8 compatibility in Excel
             fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
 
-            // CSV Header
-            fputcsv($file, ['Nom et Prénom', 'Matricule', 'Pièces Présentes', 'Pièces Manquantes', 'Dernière mise à jour']);
+            $headers = ['Nom et Prénom', 'Matricule'];
+            foreach ($allPieces as $piece) {
+                $headers[] = str_replace('_', ' ', $piece->name);
+            }
+            $headers[] = 'Dernière mise à jour';
+            fputcsv($file, $headers);
 
             foreach ($users as $user) {
-                $presentPieces = [];
-                $missingPieces = [];
                 $lastUpdate = null;
+                $row = [$user->name, $user->matricule];
 
                 foreach ($allPieces as $piece) {
                     $userPiece = $user->pieces->firstWhere('id', $piece->id);
-                    $isValidated = false;
-
-                    if ($userPiece) {
-                        $files = is_string($userPiece->pivot->file_paths)
-                            ? json_decode($userPiece->pivot->file_paths, true)
-                            : $userPiece->pivot->file_paths;
-
-                        if (is_array($files) && count($files) > 0) {
-                            $isValidated = true;
-
-                            // Comparaison pour trouver la date la plus récente
-                            $pieceDate = $userPiece->pivot->updated_at;
-                            if (!$lastUpdate || $pieceDate > $lastUpdate) {
-                                $lastUpdate = $pieceDate;
-                            }
+                    if ($this->hasAttachedFiles($userPiece)) {
+                        $row[] = 'Oui';
+                        $pieceDate = $userPiece->pivot->updated_at;
+                        if (!$lastUpdate || $pieceDate > $lastUpdate) {
+                            $lastUpdate = $pieceDate;
                         }
-                    }
-
-                    if ($isValidated) {
-                        $presentPieces[] = $piece->name;
                     } else {
-                        $missingPieces[] = $piece->name;
+                        $row[] = 'Non';
                     }
                 }
 
-                fputcsv($file, [
-                    $user->name,
-                    $user->matricule,
-                    implode('; ', $presentPieces),
-                    implode('; ', $missingPieces),
-                    $lastUpdate ? $lastUpdate->format('d/m/Y H:i') : 'Aucun document'
-                ]);
+                $row[] = $lastUpdate ? $lastUpdate->format('d/m/Y H:i') : 'Aucun document';
+                fputcsv($file, $row);
             }
 
             fclose($file);
         };
 
         return new StreamedResponse($callback, 200, $headers);
+    }
+
+    private function hasAttachedFiles($piece): bool
+    {
+        if (!$piece || !$piece->pivot) {
+            return false;
+        }
+
+        $files = is_string($piece->pivot->file_paths)
+            ? json_decode($piece->pivot->file_paths, true)
+            : $piece->pivot->file_paths;
+
+        return is_array($files) && count($files) > 0;
     }
 
 }

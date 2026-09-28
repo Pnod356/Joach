@@ -16,6 +16,7 @@ class Pieces extends Model
         'name',
         'description',
         'status',
+        'user_id',
     ];
 
     public function docrhs()

@@ -196,7 +196,7 @@ export default function SearchResult({ results, searchParams, useDept }) {
     <AuthenticatedLayout>
         <div className="py-3">
             <div className="mx-auto max-w-11xl sm:px-6 lg:px-8">
-                <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-100">
+                <div className="consultation-card overflow-hidden">
                     <div className="p-6 text-green-700 text-xl italic dark:text-green-600 text-center">
                         Mieux se souvenir d'hier aujourd'hui, afin de mieux décider pour demain
                     </div>
@@ -211,7 +211,11 @@ export default function SearchResult({ results, searchParams, useDept }) {
         <div className="py-8 ml-60 basis-4/5">
             <div className="mx-auto max-w-11xl sm:px-6 lg:px-88">
                 <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-100">
-                    <div className="p-6 border-sky-200 creation-title font-bold">
+                    <div className="consultation-card-header">
+                        <div className="consultation-card-title">Résultats des archives consultables</div>
+                        <span className="consultation-card-badge">Vue synthétique</span>
+                    </div>
+                    <div className="p-6">
 
                         <Head title='Search Results' />
                         <div className='container mx-auto p-4'>

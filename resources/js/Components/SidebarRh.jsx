@@ -6,6 +6,12 @@ export default function SidebarCons() {
     const user = usePage().props.auth.user;
     const { auth } = usePage().props;
     const userRoles = auth.roles;
+    const currentRoute = route().current()
+
+    const isActive = (routes = []) => routes.includes(currentRoute)
+    const linkClass = (active = false) => `relative flex flex-row items-center h-11 focus:outline-none transition-all duration-200 ease-in-out ${active
+        ? 'bg-blue-50 text-blue-700 border-l-4 border-indigo-500 shadow-sm ring-1 ring-blue-100'
+        : 'hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500'} pr-6`
 
   return (
     <div className='hidden md:flex items-center justify-center'>
@@ -19,7 +25,7 @@ export default function SidebarCons() {
 
                 <div className="overflow-y-auto overflow-x-hidden flex-grow">
                     <ul className="flex flex-col py-4 space-y-1">
-                        <Link href={route('dashboard')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('dashboard')} className={linkClass(isActive(['dashboard']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <HomeIcon size={15} />
                             </span>
@@ -28,7 +34,7 @@ export default function SidebarCons() {
                             </span>
                         </Link>
 
-                        <Link href={route('touteunite')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('touteunite')} className={linkClass(isActive(['touteunite']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <ListTodoIcon size={15} />
                             </span>
@@ -40,7 +46,7 @@ export default function SidebarCons() {
                         { user.roles !== 'Super' ?
                             <span></span>
                             :
-                            <Link href={route('archivbygroup')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                            <Link href={route('archivbygroup')} className={linkClass(isActive(['archivbygroup']))}>
                                 <span className="inline-flex justify-center items-center ml-4">
                                     <UsersRoundIcon size={15} />
                                 </span>
@@ -51,7 +57,7 @@ export default function SidebarCons() {
                         }
 
                         {user?.roles !== 'Super' && (
-                            <Link href={route('send.view')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                            <Link href={route('send.view')} className={linkClass(isActive(['send.view']))}>
                                 <span className="inline-flex justify-center items-center ml-4">
                                     <Share2Icon size={15} />
                                 </span>
@@ -62,7 +68,7 @@ export default function SidebarCons() {
                         )}
 
                         {user?.roles !== 'Super' && (
-                            <Link href={route('receivedoc')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                            <Link href={route('receivedoc')} className={linkClass(isActive(['receivedoc']))}>
                                 <span className="inline-flex justify-center items-center ml-4">
                                     <HandCoinsIcon size={15} />
                                 </span>
@@ -73,7 +79,7 @@ export default function SidebarCons() {
                         )}
 
                         {user?.roles === 'Super' && (
-                            <Link href={route('receivedoc')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                            <Link href={route('receivedoc')} className={linkClass(isActive(['receivedoc']))}>
                                 <span className="inline-flex justify-center items-center ml-4">
                                     <HandCoinsIcon size={15} />
                                 </span>
@@ -84,7 +90,7 @@ export default function SidebarCons() {
                         )}
 
                         {user?.departement !== 'DPC' && (
-                            <Link href={route('dpa.view')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                            <Link href={route('dpa.view')} className={linkClass(isActive(['dpa.view', 'dpa.entities', 'dpa.details', 'administration.details', 'epa.details', 'ctd.details']))}>
                                 <span className="inline-flex justify-center items-center ml-4">
                                     <ListChecksIcon size={15} />
                                 </span>
@@ -94,7 +100,7 @@ export default function SidebarCons() {
                             </Link>
                         )}
 
-                        <Link href={route('dossierrh')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('dossierrh')} className={linkClass(isActive(['dossierrh', 'dossierrh.list', 'dossierrh.incomplets', 'dossierrh.create', 'dossierrh.show', 'dossierrh.edit']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <ListChecksIcon size={15} />
                             </span>
@@ -103,7 +109,7 @@ export default function SidebarCons() {
                             </span>
                         </Link>
 
-                        <Link href={route('dette.view')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('dette.view')} className={linkClass(isActive(['dette.view', 'dette.details', 'dette.entity.details']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <ListChecksIcon size={15} />
                             </span>

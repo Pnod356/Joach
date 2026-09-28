@@ -4,11 +4,13 @@ import { debounce } from 'lodash';
 import PaginationRh from '@/Components/PaginationRh';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SidebarRh from '@/Components/SidebarRh'; // Correction du Sidebar pour rester cohérent avec DossierRh
-import { ArrowLeft, ArrowUpDown, Edit, Eye, EyeIcon, Trash, Trash2Icon } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown, Edit, EyeIcon, Trash2Icon } from 'lucide-react';
 import SidebarCons from '@/Components/SidebarCons';
 
 export default function ListRh({ users, availablePieces, totalPiecesCount, filters }) {
-    const { flash } = usePage().props;
+    const { auth, flash } = usePage().props;
+    const canDeletePersonnel = auth?.user?.roles === 'Super'
+        || (auth?.user?.roles === 'Admin' && auth?.user?.departement === 'SDAG');
     const [search, setSearch] = useState(filters.search || '');
     const [pieceFilterId, setPieceFilterId] = useState(filters.pieceFilterId || '');
     const [pieceFilterStatus, setPieceFilterStatus] = useState(filters.pieceFilterStatus || '');
@@ -53,9 +55,11 @@ export default function ListRh({ users, availablePieces, totalPiecesCount, filte
         });
     };
 
+    const formatPersonnelName = (name) => (name || '').replaceAll('_', ' ');
+
     const sortedUsers = [...users.data].sort((a, b) => {
-        const valueA = (a.name || '').toLocaleLowerCase();
-        const valueB = (b.name || '').toLocaleLowerCase();
+        const valueA = formatPersonnelName(a.name).toLocaleLowerCase();
+        const valueB = formatPersonnelName(b.name).toLocaleLowerCase();
 
         return sortDirection === 'asc'
             ? valueA.localeCompare(valueB)
@@ -160,7 +164,7 @@ export default function ListRh({ users, availablePieces, totalPiecesCount, filte
                                             return (
                                                 <tr key={user.id} className="hover:bg-blue-50/30 transition-colors group">
                                                     <td className="px-6 py-4 font-mono font-bold text-gray-700">{user.matricule}</td>
-                                                    <td className="px-6 py-4 font-medium text-gray-800">{user.name}</td>
+                                                    <td className="px-6 py-4 font-medium text-gray-800">{formatPersonnelName(user.name)}</td>
                                                     <td className="px-6 py-4">
                                                         <div className="text-[10px] font-bold mb-1 flex justify-between text-gray-500">
                                                             <span>{percentage}%</span>
@@ -177,9 +181,16 @@ export default function ListRh({ users, availablePieces, totalPiecesCount, filte
                                                         <Link href={route('dossierrh.edit', user.id)} title="Modifier" className="p-2 text-yellow-600 hover:text-yellow-600 transition-colors">
                                                             <Edit className='w-5 h-5' />
                                                         </Link>
-                                                        {/* <button onClick={() => confirmDelete(user)} title="Supprimer" className="p-2 text-red-600 hover:text-red-600 transition-colors" disabled>
-                                                            <Trash2Icon className='w-5 h-5' />
-                                                        </button> */}
+                                                        {canDeletePersonnel && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => confirmDelete(user)}
+                                                                title="Supprimer"
+                                                                className="p-2 text-red-600 hover:text-red-800 transition-colors"
+                                                            >
+                                                                <Trash2Icon className="w-5 h-5" />
+                                                            </button>
+                                                        )}
                                                     </td>
                                                 </tr>
                                             );
@@ -213,7 +224,7 @@ export default function ListRh({ users, availablePieces, totalPiecesCount, filte
                                     </div>
                                     <h3 className="text-xl font-black mb-2 text-center text-gray-800">Confirmer la suppression ?</h3>
                                     <p className="text-gray-500 text-center text-sm mb-6">
-                                        Êtes-vous sûr de vouloir supprimer le dossier de <span className="font-bold text-gray-800">{userToDelete?.name}</span> ? Cette action effacera définitivement toutes les pièces jointes associées.
+                                        Êtes-vous sûr de vouloir supprimer le personnel <span className="font-bold text-gray-800">{userToDelete?.name}</span> ? Les pièces jointes seront conservées.
                                     </p>
                                     <div className="flex gap-3">
                                         <button onClick={() => setShowDeleteModal(false)} className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200 transition-colors">Annuler</button>

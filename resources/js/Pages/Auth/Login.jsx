@@ -1,11 +1,9 @@
-import Checkbox from '@/Components/Checkbox';
 import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import LoginButton from '@/Components/LoginButton';
-import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, useForm } from '@inertiajs/react';
 
 export default function Login({ status, canResetPassword }) {
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -32,18 +30,18 @@ export default function Login({ status, canResetPassword }) {
                 </div>
             )}
 
-            <div className='m-auto rounded-md grid lg:grid-cols-2 shadow-sm'>
-                <div className="rounded-lg bg-gradient-to-r mt-24 relative overflow-hidden">
-                    <img alt="logo" src="images/Archi.png" className="absolute p-2 m-auto mb-20 bg-cover bg-center mt-10 top-11" width="700" height="800" />
+            <div className="grid overflow-hidden rounded-2xl bg-gray-100 shadow-xl lg:grid-cols-2">
+                <div className="relative hidden min-h-[620px] overflow-hidden bg-gradient-to-br from-teal-500 to-cyan-600 lg:block">
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(255,255,255,0.35),transparent_38%),radial-gradient(circle_at_bottom_left,rgba(13,148,136,0.45),transparent_45%)]" />
+                    <img alt="Logo Archidoc" src="/images/Archi.png" className="relative z-10 h-full w-full object-contain p-10" />
                 </div>
 
-                <div className='right flex flex-col justify-evenly bg-slate-100'>
-                    <div className='flex justify-center'>
-                        <div className='bg-opacity-70 px-16 py-16 self-center mt-2 lg:max-w-md rounded-md'>
+                <div className="flex items-center justify-center bg-slate-100 px-6 py-10 sm:px-12 lg:px-16">
+                    <div className="w-full max-w-md">
 
-                            <img src="images/logo_dgb.png" alt="logo" className="w-32 h-32 mx-auto mb-4" />
+                            <img src="/images/logo_dgb.png" alt="Logo DGB" className="mx-auto mb-5 h-28 w-28 object-contain" />
 
-                            <h2 className="text-black text-3xl mb-8 font-semibold text-center">
+                            <h2 className="mb-8 text-center text-3xl font-semibold text-black">
                                 Espace membre | Login
                             </h2>
 
@@ -136,7 +134,6 @@ export default function Login({ status, canResetPassword }) {
                         </div>
                     </div>
                 </div>
-            </div>
 
         </GuestLayout>
     );

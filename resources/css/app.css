@@ -19,6 +19,9 @@ body {
 .authenticated-layout {
     font-family: 'Nunito', sans-serif;
     background-color: #60c7c1;
+    box-shadow: 0 2px 12px rgb(15 23 42 / 0.08);
+    position: relative;
+    z-index: 20;
 }
 
 .dashboard {
@@ -28,6 +31,98 @@ body {
 
 .creation-title {
     color: #00c8e6;
+}
+
+@layer components {
+    .consultation-page-transition {
+        animation: consultation-fade-in 420ms ease-out both;
+    }
+    .consultation-page-header {
+        @apply mb-5 rounded-2xl border border-slate-200 bg-white px-5 py-5 shadow-sm sm:px-7;
+    }
+    .consultation-breadcrumb {
+        @apply flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+    .consultation-page-kicker {
+        @apply text-xs font-semibold uppercase tracking-[0.18em] text-blue-600;
+    }
+    .consultation-page-title {
+        @apply mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl;
+    }
+    .consultation-page-subtitle {
+        @apply mt-1 max-w-3xl text-sm text-slate-500 sm:text-base;
+    }
+    .consultation-card {
+        @apply rounded-2xl border border-slate-200 bg-white shadow-sm;
+    }
+    .consultation-card-header {
+        @apply flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-4;
+    }
+    .consultation-card-title {
+        @apply text-sm font-bold text-slate-800;
+    }
+    .consultation-card-badge {
+        @apply rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700;
+    }
+    .page-shell {
+        @apply mx-auto w-full max-w-[1600px] space-y-6;
+    }
+    .page-content {
+        @apply overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm;
+    }
+    .page-heading {
+        @apply flex flex-col gap-2 border-b border-gray-200 px-5 py-5 sm:px-7;
+    }
+    .page-heading-title {
+        @apply text-xl font-bold tracking-tight text-gray-800 sm:text-2xl;
+    }
+    .page-section {
+        @apply rounded-2xl border border-gray-200 bg-white shadow-sm;
+    }
+    .table-scroll {
+        @apply w-full overflow-x-auto rounded-xl border border-gray-200;
+    }
+    .page-content table,
+    .page-section table {
+        @apply min-w-full;
+    }
+    .page-content thead,
+    .page-section thead {
+        @apply bg-gray-50;
+    }
+    .page-content th,
+    .page-section th {
+        @apply whitespace-nowrap px-4 py-3 text-left text-xs font-bold uppercase tracking-wide text-gray-500;
+    }
+    .page-content td,
+    .page-section td {
+        @apply px-4 py-3 align-middle;
+    }
+    .page-content tbody tr,
+    .page-section tbody tr {
+        @apply border-t border-gray-100 transition-colors;
+    }
+    .page-content tbody tr:hover,
+    .page-section tbody tr:hover {
+        @apply bg-gray-50;
+    }
+}
+
+@keyframes consultation-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .consultation-page-transition {
+        animation: none;
+    }
 }
 
 @layer base {

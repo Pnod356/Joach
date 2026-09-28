@@ -1,11 +1,22 @@
 import React from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SidebarCons from '@/Components/SidebarCons';
 import PaginationRh from '@/Components/PaginationRh';
-import { Eye, Edit, Search, ArrowLeft } from 'lucide-react';
+import { Eye, Edit, Search, ArrowLeft, Trash2 } from 'lucide-react';
 
 export default function SearchRh({ users, totalPiecesCount, filters }) {
+    const { auth } = usePage().props;
+    const canDeletePersonnel = auth?.user?.roles === 'Super'
+        || (auth?.user?.roles === 'Admin' && auth?.user?.departement === 'SDAG');
+    const formatPersonnelName = (name) => (name || '').replaceAll('_', ' ');
+
+    const handleDelete = (user) => {
+        if (window.confirm(`Supprimer le dossier de ${formatPersonnelName(user.name)} ?`)) {
+            router.delete(route('dossierrh.destroy', user.id));
+        }
+    };
+
     return (
         <AuthenticatedLayout>
             <div className='flex flex-row justify-between'>
@@ -17,7 +28,7 @@ export default function SearchRh({ users, totalPiecesCount, filters }) {
 
                 <div className='basis-3/4 mr-10 py-6'>
                     <div className="flex items-center gap-4 mb-6">
-                        <Link href={route('dossierrh')} className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors">
+                        <Link href={route('dossierrh.list')} className="p-2 bg-white rounded-full shadow-sm hover:bg-gray-50 transition-colors">
                             <ArrowLeft size={20} className="text-gray-600" />
                         </Link>
                         <div>
@@ -46,7 +57,7 @@ export default function SearchRh({ users, totalPiecesCount, filters }) {
                                         return (
                                             <tr key={user.id} className="hover:bg-blue-50/30 transition-colors group">
                                                 <td className="px-6 py-4 font-mono font-bold text-gray-700">{user.matricule}</td>
-                                                <td className="px-6 py-4 font-medium text-gray-800">{user.name}</td>
+                                                <td className="px-6 py-4 font-medium text-gray-800">{formatPersonnelName(user.name)}</td>
                                                 <td className="px-6 py-4 w-64">
                                                     <div className="flex items-center gap-3">
                                                         <div className="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden">
@@ -62,6 +73,16 @@ export default function SearchRh({ users, totalPiecesCount, filters }) {
                                                     <Link href={route('dossierrh.edit', user.id)} className="p-2 text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all">
                                                         <Edit size={18} />
                                                     </Link>
+                                                    {canDeletePersonnel && (
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDelete(user)}
+                                                            title="Supprimer"
+                                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                        >
+                                                            <Trash2 size={18} />
+                                                        </button>
+                                                    )}
                                                 </td>
                                             </tr>
                                         );

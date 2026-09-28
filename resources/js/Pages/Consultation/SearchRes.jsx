@@ -38,14 +38,12 @@ export default function VosCreation({ types }) {
 
         <div className="py-8 md:pl-64 pl-4">
             <div className="w-full px-4 sm:px-6 lg:px-8">
-                <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-100">
-                    <div className="p-6 border-sky-200 creation-title font-bold">
-
-                        <div className="">
+                <div className="">
                             <div className="mx-auto max-w-15xl sm:px-6 lg:px-8">
-                                <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-100">
-                                    <div className="p-6 border-sky-200 creation-title font-bold">
-                                        Recherche
+                                <div className="consultation-card overflow-hidden">
+                                    <div className="consultation-card-header">
+                                        <div className="consultation-card-title">Critères de recherche</div>
+                                        <span className="consultation-card-badge">Archives</span>
                                     </div>
 
                                     <form onSubmit={handleSearch}>
@@ -155,8 +153,6 @@ export default function VosCreation({ types }) {
 
                     </div>
                 </div>
-            </div>
-        </div>
     </AuthenticatedLayout>
   )
 }

@@ -194,9 +194,13 @@ export default function SearchAllUnit({ results, searchParams }) {
 
             <div className='basis-3/4 mr-24 py-6'>
                 <div className="py-8">
-                    <div className="w-full overflow-hidden bg-gray-100 sm:rounded-lg dark:bg-gray-100">
+                    <div className="consultation-card w-full overflow-hidden">
                         <div className="">
-                            <div className="border-sky-200 p-6 creation-title font-bold">
+                            <div className="p-6">
+                                <div className="consultation-card-header -mx-6 -mt-6 mb-5">
+                                    <div className="consultation-card-title">Résultats toutes unités</div>
+                                    <span className="consultation-card-badge">Vue synthétique</span>
+                                </div>
 
                                 <div className='container w-full'>
 

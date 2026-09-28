@@ -62,7 +62,7 @@ export default function ShowRh({ user, stats, piecesPossedees, piecesManquantes 
                         {/* Header existant... */}
                         <div className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <Link href={route('dossierrh')} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-2 transition-colors">
+                                <Link href={route('dossierrh.list')} className="inline-flex items-center text-sm font-medium text-gray-500 hover:text-blue-600 mb-2 transition-colors">
                                     <ArrowLeft className="w-4 h-4 mr-2" /> Retour à la liste
                                 </Link>
                                 <h2 className="text-3xl font-bold text-gray-800">{user.name}</h2>
@@ -184,7 +184,7 @@ export default function ShowRh({ user, stats, piecesPossedees, piecesManquantes 
 
 
                         {/* Missing Pieces */}
-                        {piecesManquantes.length > 0 && (
+                        {/*{piecesManquantes.length > 0 && (
                             <div className='py-4'>
                                 <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2 border-b pb-2 opacity-80">
                                     <AlertCircleIcon className="text-red-400 w-5 h-5" /> Pièces manquantes
@@ -198,7 +198,7 @@ export default function ShowRh({ user, stats, piecesPossedees, piecesManquantes 
                                     ))}
                                 </div>
                             </div>
-                        )}
+                        )} */}
 
                     </div>
                 </div>

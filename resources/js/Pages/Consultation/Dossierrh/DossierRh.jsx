@@ -52,6 +52,8 @@ import EmptyState from '@/Components/EmptyState';
 export default function DossierRh({ stats, worstDossiers, recentUsers }) {
     const [searchTerm, setSearchTerm] = useState('');
 
+    const formatPersonnelName = (name) => (name || '').replaceAll('_', ' ');
+
     const handleDownloadAll = () => {
         // Redirection vers la route de téléchargement
         window.location.href = route('dossierrh.download-all', user.id);
@@ -151,7 +153,7 @@ export default function DossierRh({ stats, worstDossiers, recentUsers }) {
                                 {worstDossiers.map((data) => (
                                     <div key={data.id} className={`flex items-center justify-between p-4 rounded-xl border ${data.percentage === 0 ? 'bg-red-50/30 border-red-100' : 'bg-gray-50 border-gray-100'} transition-colors hover:shadow-sm`}>
                                         <div>
-                                            <h4 className="font-bold text-gray-800">{data.name}</h4>
+                                            <h4 className="font-bold text-gray-800">{formatPersonnelName(data.name)}</h4>
                                             <p className="text-xs text-gray-500 mt-0.5">Matricule: {data.matricule}</p>
                                         </div>
                                         <div className="flex items-center gap-4">
@@ -179,7 +181,7 @@ export default function DossierRh({ stats, worstDossiers, recentUsers }) {
                                 <Clock className="text-blue-500" size={20} />
                                 Récemment enregistrés
                             </h3>
-                            <Link href={route('dossierrh')} className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                            <Link href={route('dossierrh.list')} className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
                                 Voir tout
                             </Link>
                         </div>
@@ -190,10 +192,10 @@ export default function DossierRh({ stats, worstDossiers, recentUsers }) {
                                         <li key={user.id} className="p-4 sm:px-6 hover:bg-blue-50/30 transition-colors flex items-center justify-between group">
                                             <div className="flex items-center gap-4">
                                                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300 flex items-center justify-center text-gray-600 font-bold shrink-0">
-                                                    {user.name.charAt(0)}
+                                                    {formatPersonnelName(user.name).charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <p className="font-bold text-gray-800 group-hover:text-blue-700 transition-colors">{user.name}</p>
+                                                    <p className="font-bold text-gray-800 group-hover:text-blue-700 transition-colors">{formatPersonnelName(user.name)}</p>
                                                     <p className="text-xs text-gray-500">
                                                         Ajouté le {user.created_at}
                                                     </p>

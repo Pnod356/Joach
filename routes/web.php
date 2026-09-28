@@ -125,6 +125,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/public', [PublicController::class, 'search'])->name('public.search');
+    Route::get('/public/results', [PublicController::class, 'search'])->name('public.results');
     Route::get('/public/{id}', [PublicController::class, 'showid'])->name('public.showid');
 });
 
@@ -212,6 +213,7 @@ Route::middleware(['auth', 'verified'])->group(function() {
     Route::get('/dossierrh', [DashboardController::class, 'index'])->name('dossierrh');
     Route::get('/dossierrh/list', [DashboardController::class, 'listview'])->name('dossierrh.list'); // Déplacé ici
     Route::get('/dossierrh/incomplets', [DashboardController::class, 'incompleteDossiers'])->name('dossierrh.incomplets');
+    Route::get('/dossierrh/incomplets/export', [DashboardController::class, 'exportIncompleteDossiers'])->name('dossierrh.incomplets.export');
     Route::get('/dossierrh/report/general', [DashboardController::class, 'downloadGeneralReport'])->name('dossierrh.downloadGeneralReport');
     Route::get('/dossierrh/create', [RhController::class, 'create'])->name('dossierrh.create');
     Route::post('/dossierrh/store', [RhController::class, 'store'])->name('dossierrh.store');
@@ -220,6 +222,7 @@ Route::middleware(['auth', 'verified'])->group(function() {
     // 2. Les routes avec paramètres dynamiques ensuite
     Route::get('/dossierrh/{rhusers}', [RhController::class, 'show'])->name('dossierrh.show');
     Route::get('/dossierrh/{rhusers}/edit', [RhController::class, 'edit'])->name('dossierrh.edit'); // Ajout du préfixe /dossierrh/
+    Route::delete('/dossierrh/{rhusers}', [RhController::class, 'destroy'])->name('dossierrh.destroy');
 
     // Simplification des routes de téléchargement et d'update
     Route::get('/dossierrh/{rhusers}/download-all', [RhController::class, 'downloadFullDossier'])->name('dossierrh.download-all');

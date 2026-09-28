@@ -8,7 +8,6 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table"
@@ -38,16 +37,64 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Input } from '@/Components/ui/input';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/Components/ui/pagination';
 import SidebarPub from '@/Components/SidebarPub';
 
-export default function PublicResult({ results, searchParams }) {
-    const handleViewId = (id) => {
-        router.visit(`/search/${id}`)
-    }
+export default function PublicResult({ results, searchParams = {} }) {
+    const formatDisplayText = (value) => String(value ?? '').replace(/_/g, ' ')
 
     const [sorting, setSorting] = useState([]);
     const [columnFilters, setColumnFilters] = useState([]);
+
+    const currentPage = results.current_page ?? 1;
+    const lastPage = results.last_page ?? 1;
+    const perPage = results.per_page ?? 10;
+
+    const goToPage = (page) => {
+        if (page < 1 || page > lastPage || page === currentPage) {
+            return;
+        }
+
+        router.post(route('public.search'), {
+            ...searchParams,
+            page,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const changePerPage = (value) => {
+        router.post(route('public.search'), {
+            ...searchParams,
+            per_page: Number(value),
+            page: 1,
+        }, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const searchQuery = new URLSearchParams(searchParams).toString();
+
+    const pageItems = useMemo(() => {
+        if (lastPage <= 7) {
+            return Array.from({ length: lastPage }, (_, index) => index + 1);
+        }
+
+        const pages = new Set([1, lastPage, currentPage]);
+
+        if (currentPage > 2) pages.add(currentPage - 1);
+        if (currentPage < lastPage - 1) pages.add(currentPage + 1);
+
+        const orderedPages = [...pages].sort((a, b) => a - b);
+        return orderedPages.reduce((items, page, index) => {
+            if (index > 0 && page - orderedPages[index - 1] > 1) {
+                items.push('ellipsis-' + page);
+            }
+            items.push(page);
+            return items;
+        }, []);
+    }, [currentPage, lastPage]);
 
     const columns = [
         {
@@ -96,6 +143,11 @@ export default function PublicResult({ results, searchParams }) {
                     <ArrowUpDown className="h-4 w-4" />
                 </Button>
             ),
+            cell: ({ getValue }) => (
+                <span className="whitespace-normal break-words text-left">
+                    {formatDisplayText(getValue())}
+                </span>
+            ),
         },
         {
             accessorKey: 'description',
@@ -108,6 +160,18 @@ export default function PublicResult({ results, searchParams }) {
                     <ArrowUpDown className="h-4 w-4" />
                 </Button>
             ),
+            cell: ({ row }) => {
+                const item = row.original;
+
+                return (
+                    <Link
+                        href={`${route('public.showid', { id: item.id })}${searchQuery ? `?${searchQuery}` : ''}`}
+                        className="inline-block max-w-full whitespace-normal break-words text-left text-blue-600 underline decoration-blue-600 hover:text-blue-800 hover:decoration-blue-800"
+                    >
+                        {formatDisplayText(item.description)}
+                    </Link>
+                )
+            },
         },
         {
             accessorKey: 'date_doc',
@@ -132,23 +196,11 @@ export default function PublicResult({ results, searchParams }) {
                     <ArrowUpDown className="h-4 w-4" />
                 </Button>
             ),
-        },
-        {
-            id: "view",
-            header: 'Visualiser',
-            cell: ({ row }) => {
-                const item = row.original;
-                return (
-                    <div className='flex items-center gap-2 px-2 py-1 bg-white text-gray-600 hover:bg-gray-100 rounded'>
-                        <Link href={route('public.showid', { id: item.id })} className='items-center justify-center text-center'>
-                            <EyeIcon size={20} className='text-blue-400' />
-                        </Link>
-                    </div>
-                )
-            },
-            size: 28,
-            enableSorting: false,
-            enableHiding: false,
+            cell: ({ getValue }) => (
+                <span className="whitespace-normal break-words text-left">
+                    {formatDisplayText(getValue())}
+                </span>
+            ),
         },
         {
             id: "send",
@@ -173,12 +225,10 @@ export default function PublicResult({ results, searchParams }) {
         data: results.data, // les données actuelles de la page
         columns,
         getCoreRowModel: getCoreRowModel(),
-        getPaginationRowModel: getPaginationRowModel(),
         getSortedRowModel: getSortedRowModel(),
         getFilteredRowModel: getFilteredRowModel(),
         onSortingChange: setSorting,
         onColumnFiltersChange: setColumnFilters,
-        pageCount: results.last_page, // nombre total de pages
         state: {
             sorting,
             columnFilters,
@@ -218,12 +268,17 @@ export default function PublicResult({ results, searchParams }) {
                                     </div>
                                 )}
 
-                                <h1 className='text-2xl font-semibold mb-4'>
-                                    R&eacute;sultat de la recherche
-                                </h1>
+                                <div className='flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between'>
+                                    <h1 className='text-2xl font-semibold'>
+                                        R&eacute;sultat de la recherche
+                                    </h1>
+                                    <span className='text-sm font-medium text-gray-600'>
+                                        Nombre de documents : {results.total ?? 0}
+                                    </span>
+                                </div>
 
                                 <div className='w-full p-4 space-y-4'>
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                                         <Input
                                             type="text"
                                             placeholder="Filter par objet..."
@@ -231,6 +286,21 @@ export default function PublicResult({ results, searchParams }) {
                                             onChange={(e) => table.getColumn('description')?.setFilterValue(e.target.value)}
                                             className="px-3 py-2 border border-gray-300 rounded-md max-w-sm"
                                         />
+                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                            <label htmlFor="per-page">Documents par page :</label>
+                                            <Select value={String(perPage)} onValueChange={changePerPage}>
+                                                <SelectTrigger id="per-page" className="w-24 bg-white">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    {[10, 25, 50, 80, 100].map((size) => (
+                                                        <SelectItem key={size} value={String(size)}>
+                                                            {size}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
                                     </div>
                                     <div className='rounded-md border overflow-hidden'>
                                         <Table>
@@ -256,7 +326,7 @@ export default function PublicResult({ results, searchParams }) {
                                                         <TableRow key={row.id} className='text-gray-600'>
                                                             {
                                                                 row.getVisibleCells().map((cell) => (
-                                                                    <TableCell key={cell.id}>
+                                                                    <TableCell key={cell.id} className="align-top whitespace-normal break-words max-w-[280px]">
                                                                         {
                                                                             flexRender(
                                                                                 cell.column.columnDef.cell,
@@ -279,27 +349,41 @@ export default function PublicResult({ results, searchParams }) {
                                         </Table>
                                     </div>
 
-                                    <div className="flex items-center justify-between">
+                                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                                         <div className="text-sm text-gray-600">
                                             {table.getFilteredSelectedRowModel().rows.length} of{' '}
                                             {table.getFilteredRowModel().rows.length} row(s) shown
                                         </div>
-                                        <div className="flex gap-2">
+                                        <nav className="flex items-center gap-1" aria-label="Pagination">
                                             <Button
-                                                onClick={() => table.previousPage()}
-                                                disabled={!table.getCanPreviousPage()}
+                                                onClick={() => goToPage(currentPage - 1)}
+                                                disabled={currentPage === 1}
                                                 className="px-3 py-1 border rounded disabled:opacity-50 bg-teal-400 disabled:cursor-not-allowed hover:bg-gray-50 hover:text-gray-600"
                                             >
                                                 Pr&eacute;cedent
                                             </Button>
+                                            {pageItems.map((page) => page.toString().startsWith('ellipsis-') ? (
+                                                <span key={page} className="px-2 text-gray-500" aria-hidden="true">
+                                                    …
+                                                </span>
+                                            ) : (
+                                                <Button
+                                                    key={page}
+                                                    onClick={() => goToPage(page)}
+                                                    aria-current={page === currentPage ? 'page' : undefined}
+                                                    className={`min-w-9 px-2 py-1 border rounded hover:bg-gray-50 hover:text-gray-600 ${page === currentPage ? 'bg-teal-500 text-white' : 'bg-white text-gray-600'}`}
+                                                >
+                                                    {page}
+                                                </Button>
+                                            ))}
                                             <Button
-                                                onClick={() => table.nextPage()}
-                                                disabled={!table.getCanNextPage()}
+                                                onClick={() => goToPage(currentPage + 1)}
+                                                disabled={currentPage === lastPage}
                                                 className="px-3 py-1 border rounded disabled:opacity-50 bg-teal-400 disabled:cursor-not-allowed hover:bg-gray-50 hover:text-gray-600"
                                             >
                                                 Suivant
                                             </Button>
-                                        </div>
+                                        </nav>
                                     </div>
 
                                 </div>

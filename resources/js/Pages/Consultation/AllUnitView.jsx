@@ -35,8 +35,12 @@ export default function AllUnitView({ elements, paths, searchParams = {} }) {
             </div>
 
             <div className='basis-3/4 mr-10 lg:mr-10 md:mr-10 sm:mr-10 py-6'>
-                <div className="overflow-hidden bg-gray-100 shadow-sm sm:rounded-lg dark:bg-gray-100">
-                    <div className="border-sky-200 creation-title font-bold">
+                <div className="consultation-card overflow-hidden">
+                    <div className="p-6">
+                        <div className="consultation-card-header -mx-6 -mt-6 mb-5">
+                            <div className="consultation-card-title">Détail de l’archive</div>
+                            <span className="consultation-card-badge">Vue détaillée</span>
+                        </div>
 
                         <div className='flex flex-row items-center justify-between gap-4 mt-2'>
                             <span className="text-sm text-gray-500">

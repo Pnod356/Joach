@@ -1,8 +1,15 @@
-import { Link } from '@inertiajs/react'
-import { FileEditIcon, FolderOpen, HandCoinsIcon, ListChecksIcon, ListTodoIcon, Share2Icon, UsersRoundIcon } from 'lucide-react'
+import { Link, usePage } from '@inertiajs/react'
+import { FolderOpen } from 'lucide-react'
 import React from 'react'
 
 export default function SidebarArchive() {
+  const currentRoute = route().current()
+
+  const isActive = (routes = []) => routes.includes(currentRoute)
+  const linkClass = (active = false) => `relative flex flex-row items-center h-11 focus:outline-none transition-all duration-200 ease-in-out ${active
+    ? 'bg-blue-50 text-blue-700 border-l-4 border-indigo-500 shadow-sm ring-1 ring-blue-100'
+    : 'hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500'} pr-6`
+
   return (
     <div className='overflow-hidden flex items-center justify-center basis-32'>
         <div className="flex flex-col flex-auto flex-shrink-0 antialiased bg-gray-50 text-gray-800">
@@ -15,7 +22,7 @@ export default function SidebarArchive() {
 
                 <div className="overflow-y-auto overflow-x-hidden flex-grow">
                     <ul className="flex flex-col py-4 space-y-1">
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -23,7 +30,7 @@ export default function SidebarArchive() {
                                 Communications R&eacute;ussites
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -31,7 +38,7 @@ export default function SidebarArchive() {
                                 Communications Sans Suite
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -39,7 +46,7 @@ export default function SidebarArchive() {
                                 Transferts
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -47,7 +54,7 @@ export default function SidebarArchive() {
                                 Eliminations
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -55,7 +62,7 @@ export default function SidebarArchive() {
                                 Rapports
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -63,7 +70,7 @@ export default function SidebarArchive() {
                                 Cadre de classement
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -71,7 +78,7 @@ export default function SidebarArchive() {
                                 Reglement interieur
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -79,7 +86,7 @@ export default function SidebarArchive() {
                                 Procedures d'archivage
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -87,7 +94,7 @@ export default function SidebarArchive() {
                                 Procedures de nommages
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -95,7 +102,7 @@ export default function SidebarArchive() {
                                 Procedures de tri archives intermediaires
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -103,7 +110,7 @@ export default function SidebarArchive() {
                                 Calendrier de conservation
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -111,7 +118,7 @@ export default function SidebarArchive() {
                                 Instruments de recherche
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -119,7 +126,7 @@ export default function SidebarArchive() {
                                 Tableau de concordance
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -127,7 +134,7 @@ export default function SidebarArchive() {
                                 Registres
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -135,7 +142,7 @@ export default function SidebarArchive() {
                                 Etiquettes
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -143,7 +150,7 @@ export default function SidebarArchive() {
                                 Bordereau de communication
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>
@@ -151,7 +158,7 @@ export default function SidebarArchive() {
                                 Bordereau de transfert
                             </span>
                         </Link>
-                        <Link href={route('services')} className="relative flex flex-row items-center h-11 focus:outline-none hover:bg-gray-50 text-gray-600 hover:text-gray-800 border-l-4 border-transparent hover:border-indigo-500 pr-6">
+                        <Link href={route('services')} className={linkClass(isActive(['services']))}>
                             <span className="inline-flex justify-center items-center ml-4">
                                 <FolderOpen size={15} />
                             </span>

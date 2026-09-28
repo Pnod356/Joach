@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Controller;
 use Inertia\Inertia;
 use App\Models\Docrh;
 use App\Models\Pieces;
-use App\Models\Rhusers;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use App\Services\DossierExportService;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Validation\Rule;
+use App\Services\DossierExportService;
 
 class RhController extends Controller
 {
@@ -45,7 +46,7 @@ class RhController extends Controller
                 foreach ($request->selectedPieces as $pieceId => $value) {
 
                     // Conversion sécurisée de la valeur en booléen (gère "true", 1, true, etc.)
-                    $isPieceSelected = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+                    $isPieceSelected = filter_var($value, \FILTER_VALIDATE_BOOLEAN);
 
                     if ($isPieceSelected) {
                         $filePaths = [];
@@ -99,11 +100,16 @@ class RhController extends Controller
         ]);
     }
 
-    public function updateInfo(Request $request,Docrh $rhusers)
+    public function updateInfo(Request $request, Docrh $rhusers)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'matricule' => 'required|string|unique:users,matricule,' . $rhusers->id,
+            'matricule' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('docrhs', 'matricule')->ignore($rhusers->id),
+            ],
         ]);
 
         $rhusers->update($validated);
@@ -129,7 +135,7 @@ class RhController extends Controller
         $processedPieceIds = [];
 
         foreach ($request->input('selectedPieces', []) as $pieceId => $isSelected) {
-            if (filter_var($isSelected, FILTER_VALIDATE_BOOLEAN)) {
+            if (filter_var($isSelected, \FILTER_VALIDATE_BOOLEAN)) {
                 $processedPieceIds[] = (int) $pieceId;
 
                 // 1. Récupérer les fichiers restants envoyés par le front
@@ -174,19 +180,19 @@ class RhController extends Controller
 
     public function destroy(Docrh $rhusers)
     {
-        // Suppression des fichiers physiques
-        foreach ($rhusers->pieces as $piece) {
-            $files = json_decode($piece->pivot->file_paths, true) ?? [];
-            foreach ($files as $file) {
-                if (Storage::disk('public')->exists($file)) {
-                    Storage::disk('public')->delete($file);
-                }
-            }
-        }
+        $actor = Auth::user();
 
+        abort_unless(
+            $actor && ($actor->roles === 'Super' || ($actor->roles === 'Admin' && $actor->departement === 'SDAG')),
+            403,
+            'Vous n\'êtes pas autorisé à supprimer un personnel.'
+        );
+
+        // SoftDeletes masque le personnel sans supprimer ses liens ni ses fichiers joints.
+        // Aucune archive n'est créée : la table deleted_rh_users n'est pas nécessaire.
         $rhusers->delete();
 
-        return redirect()->back()->with('message', 'L\'employé et ses documents ont été supprimés.');
+        return redirect()->back()->with('message', 'Le personnel a été supprimé. Les fichiers joints ont été conservés.');
     }
 
     public function show(Docrh $rhusers)

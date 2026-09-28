@@ -1,13 +1,10 @@
 import React, { useState } from 'react';
-import { useForm, usePage, Head, Link } from '@inertiajs/react';
+import { useForm, Head, Link } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SidebarCons from '@/Components/SidebarCons';
-import { toast, Toaster } from 'sonner';
-import { CloseButton } from '@headlessui/react';
+import { toast } from 'sonner';
 
 export default function EditRh({ user, availablePieces, existingPieces }) {
-    const { flash } = usePage().props;
-
     // Formulaire 1 : Infos Générales
     const infoForm = useForm({
         name: user.name,
@@ -27,14 +24,9 @@ export default function EditRh({ user, availablePieces, existingPieces }) {
     const submitInfo = (e) => {
         e.preventDefault();
 
-        toast("Le dossier a été mis à jour avec succès.", {
-            type: "success",
-            action: {
-                label: <CloseButton />
-            }
-        })
-
-        infoForm.patch(route('dossierrh.updateInfo', user.id));
+        infoForm.patch(route('dossierrh.updateInfo', user.id), {
+            onSuccess: () => toast.success('Informations personnelles mises à jour.'),
+        });
     };
 
     const handleFileChange = (pieceId, files) => {
@@ -64,16 +56,13 @@ export default function EditRh({ user, availablePieces, existingPieces }) {
     const submitPieces = (e) => {
         e.preventDefault();
 
-        toast("Le dossier a été mis à jour avec succès.", {
-            type: "success",
-            action: {
-                label: <CloseButton />
-            }
-        })
         // Inertia nécessite _method: 'PUT' pour les uploads de fichiers en POST
         piecesForm.post(route('dossierrh.updatePieces', user.id), {
             forceFormData: true,
-            onSuccess: () => piecesForm.reset('newPieceFiles'),
+            onSuccess: () => {
+                piecesForm.reset('newPieceFiles');
+                toast.success('Le dossier a été mis à jour avec succès.');
+            },
         });
     };
 
@@ -94,7 +83,7 @@ export default function EditRh({ user, availablePieces, existingPieces }) {
                                 <h2 className="text-2xl font-bold text-gray-800">Édition du dossier</h2>
                                 <p className="text-gray-500 text-sm">Employé : {user.name} ({user.matricule})</p>
                             </div>
-                            <Link href={route('dossierrh')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm">
+                            <Link href={route('dossierrh.list')} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm">
                                 Retour à la liste
                             </Link>
                         </div>
@@ -110,7 +99,7 @@ export default function EditRh({ user, availablePieces, existingPieces }) {
                                             value={infoForm.data.name}
                                             onChange={e => infoForm.setData('name', e.target.value)}
                                             className="w-full border-gray-300 rounded-lg"
-                                            disabled
+                                            required
                                         />
                                     </div>
                                     <div>
@@ -120,12 +109,12 @@ export default function EditRh({ user, availablePieces, existingPieces }) {
                                             value={infoForm.data.matricule}
                                             onChange={e => infoForm.setData('matricule', e.target.value)}
                                             className="w-full border-gray-300 rounded-lg"
-                                            disabled
+                                            required
                                         />
                                     </div>
                                 </div>
                                 <div className="bg-gray-50 p-4 text-right">
-                                    <button disabled={infoForm.processing} className="bg-green-100 text-white px-4 py-2 rounded-lg">
+                                    <button disabled={infoForm.processing} className="bg-green-200 text-white px-4 py-2 rounded-lg">
                                         {infoForm.processing ? 'Enregistrement...' : 'Enregistrer les infos'}
                                     </button>
                                 </div>
