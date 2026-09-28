@@ -70,6 +70,43 @@ class DashboardController extends Controller
 
     }
 
+    public function incompleteDossiers()
+    {
+        $totalPieces = Pieces::where('status', 'Obligatoire')->count();
+        $incompleteUsers = collect();
+
+        foreach (Docrh::with('pieces')->get() as $user) {
+            $validatedPieces = 0;
+
+            foreach ($user->pieces as $piece) {
+                $files = is_string($piece->pivot->file_paths)
+                    ? json_decode($piece->pivot->file_paths, true)
+                    : $piece->pivot->file_paths;
+
+                if (is_array($files) && count($files) > 0) {
+                    $validatedPieces++;
+                }
+            }
+
+            $percentage = $totalPieces > 0 ? round(($validatedPieces / $totalPieces) * 100) : 0;
+
+            if ($percentage < 100) {
+                $incompleteUsers->push([
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'matricule' => $user->matricule,
+                    'percentage' => $percentage,
+                    'missing_count' => $totalPieces - $validatedPieces,
+                ]);
+            }
+        }
+
+        return Inertia::render('Consultation/Dossierrh/IncompleteDossiers', [
+            'incompleteUsers' => $incompleteUsers->sortBy('percentage')->values(),
+            'totalPiecesCount' => $totalPieces,
+        ]);
+    }
+
     public function listview(Request $request)
     {
         $query = Docrh::with('pieces')->latest();

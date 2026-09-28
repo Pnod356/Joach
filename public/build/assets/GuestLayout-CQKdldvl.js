@@ -1,1 +1,0 @@
-import{j as e}from"./app-sPEgS-eQ.js";function t({children:s}){return e.jsx("div",{className:"flex min-h-screen flex-col items-center mx-20 pt-6 sm:justify-center sm:pt-0",children:e.jsx("div",{className:"overflow-hidden w-9/12 mx-20 bg-gray-100 px-6 py-4 items-center shadow-md sm:rounded-lg dark:bg-gray-100",children:s})})}export{t as G};

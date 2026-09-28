@@ -1,1 +1,0 @@
-import{j as o}from"./app-sPEgS-eQ.js";import r from"./Login-Cqivtwtc.js";import"./InputError-B_eR-yU9.js";import"./InputLabel-BalEd6gN.js";import"./TextInput-BszJowJJ.js";import"./GuestLayout-CQKdldvl.js";function c({auth:e,laravelVersion:i,phpVersion:t}){return o.jsx("div",{className:"welcome-page",children:o.jsx(r,{})})}export{c as default};

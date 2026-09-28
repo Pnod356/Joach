@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Docarchives;
-use App\Models\Typedocs;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Inertia\Response;
+use App\Models\Typedocs;
+use App\Models\Docarchives;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PublicController extends Controller
 {

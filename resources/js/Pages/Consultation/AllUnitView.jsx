@@ -5,15 +5,26 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout'
 import React, { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader } from '@/Components/ui/card'
 import { Label } from '@/Components/ui/label';
-import { Link } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import { ArrowBigLeftDashIcon, BackpackIcon, FileX2 } from 'lucide-react';
 
-export default function AllUnitView({ elements, paths  }) {
+export default function AllUnitView({ elements, paths, searchParams = {} }) {
     const dateFormat = new Date(elements.created_at).toLocaleDateString('fr-FR', {
         year: 'numeric',
         month: 'long',
         day: 'numeric',
     });
+
+    const handleBackToResults = () => {
+        const hasSearchParams = Object.values(searchParams || {}).some((value) => value !== '' && value !== null && value !== undefined);
+
+        if (hasSearchParams) {
+            router.post(route('searchallunit'), searchParams);
+            return;
+        }
+
+        router.visit(route('touteunite'));
+    };
 
   return (
     <AuthenticatedLayout>
@@ -27,10 +38,18 @@ export default function AllUnitView({ elements, paths  }) {
                 <div className="overflow-hidden bg-gray-100 shadow-sm sm:rounded-lg dark:bg-gray-100">
                     <div className="border-sky-200 creation-title font-bold">
 
-                        <div className='flex flex-row gap-4 mt-2'>
+                        <div className='flex flex-row items-center justify-between gap-4 mt-2'>
                             <span className="text-sm text-gray-500">
                                 Métadonnées de l'archive
                             </span>
+                            <button
+                                type="button"
+                                onClick={handleBackToResults}
+                                className="inline-flex items-center gap-2 rounded-md bg-sky-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-sky-700"
+                            >
+                                <ArrowBigLeftDashIcon className="h-4 w-4" />
+                                Retour au tableau
+                            </button>
                         </div>
 
                         <div className='flex flex-row gap-4 mt-4'>

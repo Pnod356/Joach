@@ -46,8 +46,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Input } from '@/Components/ui/input';
-import SidebarRh from '@/Components/SidebarRh';
 import StatCard from '@/Components/StatCard';
 import EmptyState from '@/Components/EmptyState';
 
@@ -143,6 +141,9 @@ export default function DossierRh({ stats, worstDossiers, recentUsers }) {
                             <h3 className="font-bold text-gray-800 flex items-center gap-2">
                                 <Bell className="text-amber-500" size={20} /> Dossiers Incomplets
                             </h3>
+                            <Link href={route('dossierrh.incomplets')} className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                                Voir plus
+                            </Link>
                         </div>
                         <div className="p-6 flex-1">
                             {worstDossiers.length > 0 ? (

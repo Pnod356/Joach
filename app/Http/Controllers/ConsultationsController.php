@@ -194,7 +194,7 @@ class ConsultationsController extends Controller
         ]);
     }
 
-    public function allunitid($id): Response
+    public function allunitid($id, Request $request): Response
     {
         $elements = Docarchives::findOrFail($id);
 
@@ -205,7 +205,8 @@ class ConsultationsController extends Controller
 
         return Inertia::render('Consultation/AllUnitView', [
             'elements' => $elements,
-            'paths' => Storage::url($elements->filepath)
+            'paths' => Storage::url($elements->filepath),
+            'searchParams' => $request->only(['description', 'typearchive', 'date_doc', 'departement'])
         ]);
     }
 

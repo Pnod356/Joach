@@ -1,6 +1,6 @@
 import ApplicationLogo from '@/Components/ApplicationLogo';
-import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
+import { useEffect, useState } from 'react';
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -50,11 +50,101 @@ import { Toaster } from '@/Components/ui/sonner';
 
 
 export default function AuthenticatedLayout({ children, hideHeader = false }) {
-    const user = usePage().props.auth.user;
-    const { auth } = usePage().props;
+    const page = usePage();
+    const user = page.props.auth.user;
+    const { auth } = page.props;
     const userRoles = auth.roles;
 
+    const getCurrentPath = () => {
+        if (typeof window !== 'undefined') {
+            const path = window.location.pathname || '/';
+            return path.replace(/\/+$/, '') || '/';
+        }
+
+        return (page.url || '/').replace(/\/+$/, '') || '/';
+    };
+
+    const [currentPath, setCurrentPath] = useState(getCurrentPath);
     const [showingNavigationDropdown, setShowingNavigationDropdown] = useState(false);
+
+    useEffect(() => {
+        const syncPath = () => setCurrentPath(getCurrentPath());
+        const handleNavigation = () => syncPath();
+
+        syncPath();
+
+        if (typeof router.on === 'function') {
+            router.on('finish', handleNavigation);
+            router.on('navigate', handleNavigation);
+        }
+
+        if (typeof window !== 'undefined') {
+            window.addEventListener('popstate', handleNavigation);
+            window.addEventListener('pageshow', handleNavigation);
+        }
+
+        return () => {
+            if (typeof window !== 'undefined') {
+                window.removeEventListener('popstate', handleNavigation);
+                window.removeEventListener('pageshow', handleNavigation);
+            }
+
+            if (typeof router.off === 'function') {
+                router.off('finish', handleNavigation);
+                router.off('navigate', handleNavigation);
+            }
+        };
+    }, [page.url]);
+
+    const isActivePath = (href, exact = false) => {
+        if (!href) return false;
+
+        const normalizedHref = href.replace(/\/+$/, '') || '/';
+        const normalizedPath = currentPath || '/';
+
+        return exact
+            ? normalizedPath === normalizedHref
+            : normalizedPath === normalizedHref || normalizedPath.startsWith(`${normalizedHref}/`);
+    };
+
+    const isHomeActive = isActivePath(route('dashboard'), true) || currentPath === '/';
+    const isCreationsActive = [
+        route('typearchives.view'),
+        route('emplacement.view'),
+        route('groupeacces.view'),
+        route('archives.view'),
+        route('dossierrh.create'),
+    ].some((href) => isActivePath(href));
+    const isConsultationsActive = [
+        route('public'),
+        route('touteunite'),
+        route('historique.index'),
+    ].some((href) => isActivePath(href));
+    const isServicesActive = isActivePath(route('services'), true);
+    const isReglementationActive = [
+        'documents/Loi_001_Regissant_Archives_Cameroun_24072024.pdf',
+        'documents/Loi_2000-010_19-dec_Regissant_Archives_Cameroun.pdf',
+        'documents/Loi_Cybersecurite_Criminalite.pdf',
+        'documents/Loi_Commerce_Electronique.pdf',
+        'documents/LOI_COMMUNICATIONS_ ELECTRONIQUES.pdf',
+        'documents/Decret_Archive.pdf',
+    ].some((href) => currentPath.includes(href));
+    const isOrganigrammeActive = [
+        'documents/ORGANIGRAMME_DGB.pdf',
+        'documents/DECRET_066_PORTANT_ORGANISATION_MINFI_28022013_PR.pdf',
+    ].some((href) => currentPath.includes(href));
+    const isOrganisationActive = [
+        'documents/Rapport_Audit_Archivage-Novembre-2019.pdf',
+        'documents/Réseau_Archivage_DGB.pdf',
+    ].some((href) => currentPath.includes(href));
+    const isAdminActive = [
+        route('password.requests'),
+        route('suspicious.connections'),
+        route('statistiques'),
+        route('journal'),
+        route('compte'),
+        route('backup'),
+    ].some((href) => isActivePath(href));
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-200">
@@ -82,7 +172,10 @@ export default function AuthenticatedLayout({ children, hideHeader = false }) {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="start">
                                         <DropdownMenuItem asChild>
-                                            <Link href={route('dashboard')}>
+                                            <Link
+                                                href={route('dashboard')}
+                                                className={cn("w-full", isHomeActive && "font-semibold text-red-400 text-primary underline decoration-2 underline-offset-4")}
+                                            >
                                                 Accueil
                                             </Link>
                                         </DropdownMenuItem>
@@ -93,7 +186,10 @@ export default function AuthenticatedLayout({ children, hideHeader = false }) {
                                     </DropdownMenu>
                                 </BreadcrumbItem>
                                 <BreadcrumbItem className="max-md:hidden text-white">
-                                    <BreadcrumbLink href={route('dashboard')}>
+                                    <BreadcrumbLink
+                                        href={route('dashboard')}
+                                        className={cn("text-white", isHomeActive && "font-semibold text-yellow-300 underline decoration-2 underline-offset-4")}
+                                    >
                                         Accueil
                                     </BreadcrumbLink>
                                 </BreadcrumbItem>
@@ -104,7 +200,10 @@ export default function AuthenticatedLayout({ children, hideHeader = false }) {
                                 <BreadcrumbItem>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent text-white">
+                                            <Button
+                                                variant="ghost"
+                                                className={cn("h-auto p-0 hover:bg-transparent text-white", isCreationsActive && "text-yellow-300 underline decoration-2 underline-offset-4")}
+                                            >
                                                 <BreadcrumbLink>
                                                     Créations
                                                 </BreadcrumbLink>
@@ -198,7 +297,10 @@ export default function AuthenticatedLayout({ children, hideHeader = false }) {
                                 <BreadcrumbItem>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent text-white">
+                                            <Button
+                                                variant="ghost"
+                                                className={cn("h-auto p-0 hover:bg-transparent text-white", isConsultationsActive && "text-yellow-300 underline decoration-2 underline-offset-4")}
+                                            >
                                                 <BreadcrumbLink>
                                                     Consultations
                                                 </BreadcrumbLink>
@@ -250,7 +352,197 @@ export default function AuthenticatedLayout({ children, hideHeader = false }) {
                                 <BreadcrumbItem>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent text-white">
+                                            <Button variant="ghost" className={cn("h-auto p-0 hover:bg-transparent text-white", isReglementationActive && "text-yellow-300 underline decoration-2 underline-offset-4")}>
+                                                <BreadcrumbLink>
+                                                    Réglementation Archives
+                                                </BreadcrumbLink>
+                                                <ChevronDownIcon
+                                                    size={16}
+                                                    className="opacity-60"
+                                                    aria-hidden="true"
+                                                />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="max-w-64">
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/Loi_001_Regissant_Archives_Cameroun_24072024.pdf" target="_blank">
+                                                            Loi sur les archives 2024
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/Loi_2000-010_19-dec_Regissant_Archives_Cameroun.pdf" target="_blank">
+                                                            Loi sur les archives 2000
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/Loi_Cybersecurite_Criminalite.pdf" target="_blank">
+                                                            Loi sur la Cybersécurité et Cybercriminalité
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/Loi_Commerce_Electronique.pdf" target="_blank">
+                                                            Loi sur le Commerce Électronique
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                             <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/LOI_COMMUNICATIONS_ ELECTRONIQUES.pdf" target="_blank">
+                                                            Loi sur le Communication Électronique
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/Decret_Archive.pdf" target="_blank">
+                                                            Decret sur les archives
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </BreadcrumbItem>
+                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
+                                <BreadcrumbItem>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className={cn("h-auto p-0 hover:bg-transparent text-white", isOrganigrammeActive && "text-yellow-300 underline decoration-2 underline-offset-4")}>
+                                                <BreadcrumbLink>
+                                                    Organigramme DGB
+                                                </BreadcrumbLink>
+                                                <ChevronDownIcon
+                                                    size={16}
+                                                    className="opacity-60"
+                                                    aria-hidden="true"
+                                                />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="max-w-64">
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/ORGANIGRAMME_DGB.pdf" target="_blank">
+                                                            Organigramme DGB
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/DECRET_066_PORTANT_ORGANISATION_MINFI_28022013_PR.pdf" target="_blank">
+                                                            Organigramme DGB Décret
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </BreadcrumbItem>
+                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
+                                <BreadcrumbItem>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className={cn("h-auto p-0 hover:bg-transparent text-white", isOrganisationActive && "text-yellow-300 underline decoration-2 underline-offset-4")}>
+                                                <BreadcrumbLink>
+                                                    Organisation des archives de la DGB
+                                                </BreadcrumbLink>
+                                                <ChevronDownIcon
+                                                    size={16}
+                                                    className="opacity-60"
+                                                    aria-hidden="true"
+                                                />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent className="max-w-64">
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/Rapport_Audit_Archivage-Novembre-2019.pdf" target="_blank">
+                                                            Rapport d'audit des archives de la DGB
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                            <DropdownMenuGroup>
+                                                <DropdownMenuItem>
+                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
+                                                    <span>
+                                                        <BreadcrumbLink href="documents/Réseau_Archivage_DGB.pdf" target="_blank">
+                                                            Reseau des référents des archives de la DGB
+                                                        </BreadcrumbLink>
+                                                    </span>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuGroup>
+                                            <DropdownMenuSeparator />
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </BreadcrumbItem>
+                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
+                                { user.roles !== 'Super' ?
+                                    <BreadcrumbItem className="max-md:hidden text-white">
+                                        <BreadcrumbLink
+                                            href={route('services')}
+                                            className={cn("text-white", isServicesActive && "font-semibold text-yellow-300 underline decoration-2 underline-offset-4")}
+                                        >
+
+                                        </BreadcrumbLink>
+                                    </BreadcrumbItem>
+                                    :
+                                    <BreadcrumbItem className="max-md:hidden text-white">
+                                        <BreadcrumbLink
+                                            href={route('services')}
+                                            className={cn("text-white", isServicesActive && "font-semibold text-yellow-300 underline decoration-2 underline-offset-4")}
+                                        >
+                                            Service Archives
+                                        </BreadcrumbLink>
+                                    </BreadcrumbItem>
+                                }
+
+                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
+                                <BreadcrumbItem>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className={cn("h-auto p-0 hover:bg-transparent text-white", isAdminActive && "text-yellow-300 underline decoration-2 underline-offset-4")}
+                                            >
                                                 <BreadcrumbLink>
                                                     Administration
                                                 </BreadcrumbLink>
@@ -351,309 +643,6 @@ export default function AuthenticatedLayout({ children, hideHeader = false }) {
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </BreadcrumbItem>
-                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
-                                <BreadcrumbItem>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent text-white">
-                                                <BreadcrumbLink>
-                                                    Textes reglémentaires
-                                                </BreadcrumbLink>
-                                                <ChevronDownIcon
-                                                    size={16}
-                                                    className="opacity-60"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="max-w-64">
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <SearchCheck size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Recherche
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            {/* <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <NotebookIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Lois
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <NotebookIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Ordonnances
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <NotebookIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Décrets
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <NotebookIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Arretés
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <NotebookIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Décisions
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <NotebookIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Circulaires
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <NotebookIcon size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href={route('public')}>
-                                                            Instructions
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />*/}
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/Loi_001_Regissant_Archives_Cameroun_24072024.pdf" target="_blank">
-                                                            Loi sur les archives 2024
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/Loi_2000-010_19-dec_Regissant_Archives_Cameroun.pdf" target="_blank">
-                                                            Loi sur les archives 2000
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/Loi_Cybersecurite_Criminalite.pdf" target="_blank">
-                                                            Loi sur la Cybersécurité et Cybercriminalité
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/Loi_Commerce_Electronique.pdf" target="_blank">
-                                                            Loi sur le Commerce Électronique
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                             <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/LOI_COMMUNICATIONS_ ELECTRONIQUES.pdf" target="_blank">
-                                                            Loi sur le Communication Électronique
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/Decret_Archive.pdf" target="_blank">
-                                                            Decret sur les archives
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </BreadcrumbItem>
-                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
-                                <BreadcrumbItem>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent text-white">
-                                                <BreadcrumbLink>
-                                                    Organigramme DGB
-                                                </BreadcrumbLink>
-                                                <ChevronDownIcon
-                                                    size={16}
-                                                    className="opacity-60"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="max-w-64">
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/ORGANIGRAMME_DGB.pdf" target="_blank">
-                                                            Organigramme DGB
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/DECRET_066_PORTANT_ORGANISATION_MINFI_28022013_PR.pdf" target="_blank">
-                                                            Decret portant orginanisation MINFI 2013
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/DECRET_365_PORTANT_ORGANISATION_MINFI_08112008.pdf" target="_blank">
-                                                            Decret portant orginanisation MINFI 2008
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/DECRET_088_COMPLETANT_DISPOSITIONS_DECRET_217_09091998_PORTANT_ORGANISATION_MINEFI_17042001.pdf" target="_blank">
-                                                            Decret portant orginanisation MINFI 2001
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/DECRET_282_MODIFIANT_DISPOSITION_DECRET_168_16081995_PORTANT_ORGANISATION_MINISTERE_ECEONOMIE_FINANCES_02121996.pdf" target="_blank">
-                                                            Decret portant orginanisation MINFI 1996
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </BreadcrumbItem>
-                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
-                                <BreadcrumbItem>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="h-auto p-0 hover:bg-transparent text-white">
-                                                <BreadcrumbLink>
-                                                    Organisation des archives de la DGB
-                                                </BreadcrumbLink>
-                                                <ChevronDownIcon
-                                                    size={16}
-                                                    className="opacity-60"
-                                                    aria-hidden="true"
-                                                />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent className="max-w-64">
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/Rapport_Audit_Archivage-Novembre-2019.pdf" target="_blank">
-                                                            Rapport d'audit des archives de la DGB
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                            <DropdownMenuGroup>
-                                                <DropdownMenuItem>
-                                                    <ListTodo size={16} className="opacity-60" aria-hidden="true" />
-                                                    <span>
-                                                        <BreadcrumbLink href="documents/Réseau_Archivage_DGB.pdf" target="_blank">
-                                                            Reseau des référents des archives de la DGB
-                                                        </BreadcrumbLink>
-                                                    </span>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuGroup>
-                                            <DropdownMenuSeparator />
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </BreadcrumbItem>
-                                <BreadcrumbSeparator> / </BreadcrumbSeparator>
-                                { user.roles !== 'Super' ?
-                                    <BreadcrumbItem className="max-md:hidden text-white">
-                                        <BreadcrumbLink href={route('services')}>
-
-                                        </BreadcrumbLink>
-                                    </BreadcrumbItem>
-                                    :
-                                    <BreadcrumbItem className="max-md:hidden text-white">
-                                        <BreadcrumbLink href={route('services')}>
-                                            Service Archives
-                                        </BreadcrumbLink>
-                                    </BreadcrumbItem>
-                                }
-
                             </BreadcrumbList>
                         </Breadcrumb>
                     </div>

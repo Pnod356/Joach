@@ -23,7 +23,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader } from '@/Components/ui/card'
 import TabArchives from './TabArchives'
 import { toast, Toaster } from 'sonner'
@@ -31,6 +31,8 @@ import { CloseButton } from '@headlessui/react'
 
 export default function TypeArchives({ types, groupes, locations }) {
     const [ currentStep, setCurrentStep ] = useState(1);
+    const [ archiveSearch, setArchiveSearch ] = useState('');
+    const [ isArchiveOpen, setIsArchiveOpen ] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
         typearchive: '',
@@ -47,6 +49,24 @@ export default function TypeArchives({ types, groupes, locations }) {
     });
 
     const user = usePage().props.auth.user;
+
+    useEffect(() => {
+        if (data.typearchive) {
+            setArchiveSearch(data.typearchive);
+        } else {
+            setArchiveSearch('');
+        }
+    }, [data.typearchive]);
+
+    const filteredTypes = (types || []).filter((role) =>
+        role.intitule?.toLowerCase().includes(archiveSearch.toLowerCase())
+    );
+
+    const handleArchiveSelect = (value) => {
+        setData('typearchive', value);
+        setArchiveSearch(value);
+        setIsArchiveOpen(false);
+    };
 
     // Filtrer les groupes selon le rôle de l'utilisateur
     const filteredGroupes = user?.roles === 'Super'
@@ -159,7 +179,7 @@ export default function TypeArchives({ types, groupes, locations }) {
                                     </div>
 
                                     <div className='mx-8 py-2  gap-4'>
-                                        <div className="[--ring:var(--color-indigo-300)] *:not-first:mt-2 in-[.dark]:[--ring:var(--color-indigo-900)]">
+                                        <div className="[--ring:var(--color-indigo-300)] *:not-first:mt-2 in-[.dark]:[--ring:var(--color-indigo-900)] relative">
                                             <Label htmlFor="typearchive">
                                                 Type d'archives:
                                                 <span className="text-red-500">
@@ -167,24 +187,43 @@ export default function TypeArchives({ types, groupes, locations }) {
                                                 </span>
                                             </Label>
 
-                                            <Select
-                                                // Use the `onValueChange` prop to update Inertia's form data
-                                                onValueChange={(value) => setData('typearchive', value)}
-                                                // Set the currently selected value based on the form data
-                                                value={data.typearchive}
-                                                >
-                                                <SelectTrigger id="typearchive">
-                                                    {/* The SelectValue displays the currently selected item's text */}
-                                                    <SelectValue placeholder="Selectionner le type d'archive..." />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {types.map((role) => (
-                                                        <SelectItem key={role.id} value={String(role.intitule)}>
-                                                            {role.intitule}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="relative">
+                                                <Input
+                                                    id="typearchive"
+                                                    type="text"
+                                                    value={archiveSearch}
+                                                    placeholder="Selectionner le type d'archive..."
+                                                    className="mt-1 block w-full"
+                                                    onChange={(e) => {
+                                                        setArchiveSearch(e.target.value);
+                                                        setIsArchiveOpen(true);
+                                                    }}
+                                                    onFocus={() => setIsArchiveOpen(true)}
+                                                />
+
+                                                {isArchiveOpen && (
+                                                    <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg">
+                                                        {filteredTypes.length > 0 ? (
+                                                            filteredTypes.map((role) => (
+                                                                <li key={role.id}>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="flex w-full items-center px-3 py-2 text-left text-sm hover:bg-sky-50"
+                                                                        onMouseDown={(e) => e.preventDefault()}
+                                                                        onClick={() => handleArchiveSelect(String(role.intitule))}
+                                                                    >
+                                                                        {role.intitule}
+                                                                    </button>
+                                                                </li>
+                                                            ))
+                                                        ) : (
+                                                            <li className="px-3 py-2 text-sm text-gray-500">
+                                                                Aucun type correspondant
+                                                            </li>
+                                                        )}
+                                                    </ul>
+                                                )}
+                                            </div>
                                             {errors.typearchive && <p className="text-red-500 text-sm mt-1">{errors.typearchive}</p>}
 
                                         </div>

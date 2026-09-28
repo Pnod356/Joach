@@ -211,6 +211,7 @@ Route::middleware(['auth', 'verified'])->group(function() {
     // 1. Les routes fixes (statiques) en premier
     Route::get('/dossierrh', [DashboardController::class, 'index'])->name('dossierrh');
     Route::get('/dossierrh/list', [DashboardController::class, 'listview'])->name('dossierrh.list'); // Déplacé ici
+    Route::get('/dossierrh/incomplets', [DashboardController::class, 'incompleteDossiers'])->name('dossierrh.incomplets');
     Route::get('/dossierrh/report/general', [DashboardController::class, 'downloadGeneralReport'])->name('dossierrh.downloadGeneralReport');
     Route::get('/dossierrh/create', [RhController::class, 'create'])->name('dossierrh.create');
     Route::post('/dossierrh/store', [RhController::class, 'store'])->name('dossierrh.store');

@@ -4,7 +4,7 @@ import { debounce } from 'lodash';
 import PaginationRh from '@/Components/PaginationRh';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import SidebarRh from '@/Components/SidebarRh'; // Correction du Sidebar pour rester cohérent avec DossierRh
-import { ArrowLeft, Edit, Eye, EyeIcon, Trash, Trash2Icon } from 'lucide-react';
+import { ArrowLeft, ArrowUpDown, Edit, Eye, EyeIcon, Trash, Trash2Icon } from 'lucide-react';
 import SidebarCons from '@/Components/SidebarCons';
 
 export default function ListRh({ users, availablePieces, totalPiecesCount, filters }) {
@@ -12,6 +12,7 @@ export default function ListRh({ users, availablePieces, totalPiecesCount, filte
     const [search, setSearch] = useState(filters.search || '');
     const [pieceFilterId, setPieceFilterId] = useState(filters.pieceFilterId || '');
     const [pieceFilterStatus, setPieceFilterStatus] = useState(filters.pieceFilterStatus || '');
+    const [sortDirection, setSortDirection] = useState('asc');
 
     // Ref pour éviter le premier rendu du useEffect
     const isFirstRender = useRef(true);
@@ -51,6 +52,15 @@ export default function ListRh({ users, availablePieces, totalPiecesCount, filte
             onSuccess: () => setShowDeleteModal(false),
         });
     };
+
+    const sortedUsers = [...users.data].sort((a, b) => {
+        const valueA = (a.name || '').toLocaleLowerCase();
+        const valueB = (b.name || '').toLocaleLowerCase();
+
+        return sortDirection === 'asc'
+            ? valueA.localeCompare(valueB)
+            : valueB.localeCompare(valueA);
+    });
 
     return (
         <AuthenticatedLayout>
@@ -118,13 +128,22 @@ export default function ListRh({ users, availablePieces, totalPiecesCount, filte
                                     <thead className="bg-gray-50 text-xs uppercase text-gray-500 font-bold border-b">
                                         <tr>
                                             <th className="px-6 py-4">Matricule</th>
-                                            <th className="px-6 py-4">Nom et Prénom</th>
+                                            <th className="px-6 py-4">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
+                                                    className="flex items-center gap-2 font-bold text-gray-600 hover:text-blue-600 transition-colors"
+                                                >
+                                                    Nom et Prénom
+                                                    <ArrowUpDown size={14} />
+                                                </button>
+                                            </th>
                                             <th className="px-6 py-4">Progression</th>
                                             <th className="px-6 py-4 text-right">Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-gray-100">
-                                        {users.data.length > 0 ? users.data.map(user => {
+                                        {sortedUsers.length > 0 ? sortedUsers.map(user => {
                                             const validatedCount = user.pieces.filter(p => {
                                                 if (p.status !== 'Obligatoire') return false;
                                                 try {

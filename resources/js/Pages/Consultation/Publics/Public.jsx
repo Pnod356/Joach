@@ -73,7 +73,7 @@ export default function Publics({ types }) {
                                                             <SelectValue placeholder="Selectionner le type d'archive..." />
                                                         </SelectTrigger>
                                                         <SelectContent>
-                                                            <SelectItem value="CONSTITUTIONS">Constitution</SelectItem>
+                                                            <SelectItem value="CONSTITUTION">Constitution</SelectItem>
                                                             <SelectItem value="LOIS">Lois</SelectItem>
                                                             <SelectItem value="ORDONNANCES">Ordonnances</SelectItem>
                                                             <SelectItem value="DECRETS">Décrets</SelectItem>

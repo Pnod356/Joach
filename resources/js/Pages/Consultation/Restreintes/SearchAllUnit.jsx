@@ -42,6 +42,19 @@ export default function SearchAllUnit({ results, searchParams }) {
     const [columnVisibility, setColumnVisibility] = useState({});
     const [rowSelection, setRowSelection] = useState({});
 
+    const buildDetailHref = (itemId) => {
+        const queryParams = Object.entries(searchParams || {}).reduce((acc, [key, value]) => {
+            if (value !== '' && value !== null && value !== undefined) {
+                acc[key] = value;
+            }
+            return acc;
+        }, {});
+
+        const queryString = new URLSearchParams(queryParams).toString();
+
+        return route('touteunite.allunitid', { id: itemId }) + (queryString ? `?${queryString}` : '');
+    };
+
     const columns = [
         {
             id: "select",
@@ -93,7 +106,7 @@ export default function SearchAllUnit({ results, searchParams }) {
 
                 if (item.format === 'Document PDF' || item.format === 'Document Papier') {
                     return (
-                        <a href={route('touteunite.allunitid', { id: item.id })} className='text-blue-500 hover:text-blue-700 hover:underline whitespace-normal'>
+                        <a href={buildDetailHref(item.id)} className='text-blue-500 hover:text-blue-700 hover:underline whitespace-normal'>
                             {description}
                         </a>
                     );
